@@ -13,26 +13,9 @@
     <script>
 
     var midiAccess;
-    // var disp;
 
     window.addEventListener("load", function(){ //when page loads
-        // Instantiate Display object which underpins the whole UI
-        // disp = new Display();
         var myp5 = new p5(p5sketch);
-
-        // Handle dropdown input selector
-        var dropdown = document.getElementById("inports_selector");
-        dropdown.addEventListener("change", function() {
-            var inputs = midiAccess.inputs.values();
-            for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-                // Assign callback function to the selected MIDI input
-                if (input.value.name == this.value) {
-                    input.value.onmidimessage = onMIDIMessage;
-                } else {
-                    input.value.onmidimessage = null;
-                }
-            }
-        });
     });
 
     // request MIDI access
@@ -48,11 +31,35 @@
         midiAccess = midiAccess_
         var inputs = midiAccess.inputs.values();
         for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            // Populate dropdown menu with available ports
-            var dropdown = document.getElementById("inports_selector");
-            var option = document.createElement("option");
-            option.text = input.value.name;
-            dropdown.add(option);
+            // Create a checkbox for each available port
+            var container = document.getElementById('checkbox_container');
+
+            var div = document.createElement('div');
+            var checkbox = document.createElement('input');
+            checkbox.type = "checkbox";
+            checkbox.name = "midi_input_checkbox";
+            checkbox.value = input.value.name;
+            checkbox.id = input.value.name;
+            checkbox.addEventListener("change", function() {
+                var inputs = midiAccess.inputs.values();
+                for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
+                    // Assign callback function to the selected MIDI input(s)
+                    cb = document.getElementById(input.value.name);
+                    if (cb.checked) { 
+                        input.value.onmidimessage = onMIDIMessage;
+                    } else {
+                        input.value.onmidimessage = null;
+                    }
+                }
+            });
+
+            var label = document.createElement('label')
+            label.htmlFor = input.value.name;
+            label.appendChild(document.createTextNode(input.value.name));
+
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            container.appendChild(div);
         }
     }
     function onMIDIFailure(e) {
@@ -64,8 +71,6 @@
 </head>
 
 <body>
-    <select id="inports_selector" style="position: absolute">
-        <option value=null>--</option>
-    </select>
+    <div id="checkbox_container" style="position: absolute; color: white"></div>
 </body>
 </html>

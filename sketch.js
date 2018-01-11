@@ -16,7 +16,7 @@ function MIDI_Message(data) {
 
 function onMIDIMessage(data) {
     msg = new MIDI_Message(data.data);
-    console.log('MIDI data', msg);
+    // console.log('MIDI data', msg);
 
     keys[msg.note].type = msg.type;
     keys[msg.note].channel = msg.channel;
@@ -58,10 +58,7 @@ var p5sketch = function( p ) {
         var keys_height = 50;
         for (var i=0; i<NUM_KEYS; i++) {
             key = new Key(i, keys_width, keys_height)
-            console.log(key);
             keys.push(key);
-            // console.log("this is happening");
-            // console.log(this.keys);
         }
     }
 
