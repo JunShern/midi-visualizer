@@ -1,4 +1,5 @@
 var keys = [];
+var channel_colours = _.range(16).map(i => 'hsl('+Math.round((i+7)%16*360/16)+',100%,50%)');
 
 function MIDI_Message(data) {
     /*
@@ -12,14 +13,34 @@ function MIDI_Message(data) {
     this.type = data[0] & 0xf0;
     this.note = data[1];
     this.velocity = data[2];
+
+    this.toString = function() {
+        return 'type=' + this.type + 
+            ' channel=' + this.channel + 
+            ' note=' + this.note + 
+            ' velocity=' + this.velocity;
+    }
+}
+
+function write_to_console(text, color) {
+    container = document.getElementById("console");
+    // Create new paragraph element with text
+    paragraph = document.createElement("p");
+    var textnode = document.createTextNode(text);
+    paragraph.appendChild(textnode);
+    paragraph.className = "consoletext";
+    paragraph.style.color = color;
+    container.appendChild(paragraph);
+    // Scroll to bottom of console container
+    console_container = document.getElementById("console_container");
+    console_container.scrollTop = console_container.scrollHeight;
 }
 
 function onMIDIMessage(data) {
     msg = new MIDI_Message(data.data);
-    // console.log('MIDI data', msg);
-
     keys[msg.note].type = msg.type;
     keys[msg.note].channel = msg.channel;
+    write_to_console(msg.toString(), channel_colours[msg.channel]);
 }
 
 var p5sketch = function( p ) {
@@ -35,7 +56,7 @@ var p5sketch = function( p ) {
         this.type = NOTE_OFF;
         this.channel = 0;
         this.colour_off = p.color(30,30,30);
-        this.colour_on = _.range(16).map(i => 'hsb('+Math.round(i*360/16)+',100%,100%)');
+        this.colour_on = _.range(16).map(i => 'hsb('+Math.round((i+7)%16*360/16)+',100%,100%)');
 
         this.draw = function() {
             if (this.type == NOTE_ON) {
@@ -48,9 +69,8 @@ var p5sketch = function( p ) {
         }
     }
 
-    // p.js stuff
     p.setup = function() {
-        p.createCanvas(p.windowWidth, p.windowHeight);
+        p.createCanvas(p.windowWidth, p.windowHeight/2);
         p.noStroke();
         p.frameRate(30);
 
