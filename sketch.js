@@ -31,6 +31,11 @@ function write_to_console(text, color) {
     paragraph.className = "consoletext";
     paragraph.style.color = color;
     container.appendChild(paragraph);
+    // Delete nodes if too many children
+    if (document.getElementById('console').children.length > 200) {
+        var firstchild = document.getElementById('console').children[0];
+        document.getElementById('console').removeChild(firstchild);    
+    }
     // Scroll to bottom of console container
     console_container = document.getElementById("console_container");
     console_container.scrollTop = console_container.scrollHeight;
@@ -40,6 +45,7 @@ function onMIDIMessage(data) {
     msg = new MIDI_Message(data.data);
     keys[msg.note].type = msg.type;
     keys[msg.note].channel = msg.channel;
+    keys[msg.note].velocity = msg.velocity;
     write_to_console(msg.toString(), channel_colours[msg.channel]);
 }
 
@@ -55,17 +61,19 @@ var p5sketch = function( p ) {
         this.left_edge = index * key_w;
         this.type = NOTE_OFF;
         this.channel = 0;
-        this.colour_off = p.color(30,30,30);
-        this.colour_on = _.range(16).map(i => 'hsb('+Math.round((i+7)%16*360/16)+',100%,100%)');
+        this.velocity = 0;
+        this.colour_off = p.color(0,0,10);
+        this.colour_on = _.range(16).map(i => p.color(Math.round((i+7)%16*360/16),100,100,1) );
 
         this.draw = function() {
-            if (this.type == NOTE_ON) {
-                p.fill(this.colour_on[this.channel]);
-                p.rect(this.left_edge, p.height-this.height, this.width, this.height);
-            } else if (this.type == NOTE_OFF) {
-                p.fill(this.colour_off);
-                p.rect(this.left_edge, p.height-this.height, this.width, this.height);            
-            }
+            // Always draw the empty key first, assuming note is off
+            p.fill(this.colour_off);
+            p.rect(this.left_edge, p.height-this.height, this.width, this.height);
+            // Draw coloured key based on velocity (will end up transparent for NOTE_OFF since velocity=0)
+            this.colour_on[this.channel]._array[3] = this.velocity / 125;
+            console.log(this.colour_on[this.channel]);
+            p.fill(this.colour_on[this.channel]);
+            p.rect(this.left_edge, p.height-this.height, this.width, this.height);
         }
     }
 
@@ -73,6 +81,7 @@ var p5sketch = function( p ) {
         p.createCanvas(p.windowWidth, p.windowHeight/2);
         p.noStroke();
         p.frameRate(30);
+        p.colorMode(p.HSB); // Max values: 360, 100, 100, 1
 
         var keys_width = p.width / NUM_KEYS;
         var keys_height = 50;
